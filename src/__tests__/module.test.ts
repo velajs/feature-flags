@@ -1,4 +1,4 @@
-import { InjectionToken, MetadataRegistry, Module } from '@velajs/vela';
+import { InjectionToken, MetadataRegistry, Module, runInEntrypointScope } from '@velajs/vela';
 import { Test } from '@velajs/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -29,6 +29,21 @@ describe('FeatureFlagsModule', () => {
     expect(flags).toBeInstanceOf(FeatureFlagsService);
     expect(await flags.getBooleanValue('new-checkout')).toBe(true); // driver value
     expect(await flags.getStringValue('layout')).toBe('v1'); // manifest default
+  });
+
+  it('resolves and evaluates inside an entrypoint (queue/cron) scope — no request', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [FeatureFlagsModule.forRoot({ drivers: [memoryFlagDriver({ values: { job: true } })] })],
+    }).compile();
+    const app = await moduleRef.createApplication();
+
+    // runInEntrypointScope deliberately does NOT seed REQUEST_CONTEXT; the
+    // service must still resolve and evaluate there.
+    const value = await runInEntrypointScope(app.getContainer(), async (scope) => {
+      const flags = scope.resolve(FEATURE_FLAG_TOKENS.Service);
+      return flags.getBooleanValue('job');
+    });
+    expect(value).toBe(true);
   });
 
   it('forRoot: defaults to a single in-memory driver when none are configured', async () => {
