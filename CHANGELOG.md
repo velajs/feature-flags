@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+### Patch Changes
+
+- 2b92134: Modernize the package build, validation, and release toolchain.
+
 ## 0.1.0
 
 Initial release.
