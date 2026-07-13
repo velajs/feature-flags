@@ -49,9 +49,7 @@ describe('edge-runtime audit', () => {
 
     for (const file of files) {
       const content = await readFile(file, 'utf8');
-      const stripped = content
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/\/\/[^\n]*/g, '');
+      const stripped = content.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
       for (const { name, re } of FORBIDDEN) {
         re.lastIndex = 0;
         if (re.test(stripped)) {

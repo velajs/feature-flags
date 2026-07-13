@@ -11,7 +11,8 @@ function service(options: FeatureFlagsOptions): FeatureFlagsService {
 }
 
 function buildRegistry(options: FeatureFlagsOptions): FeatureFlagDriverRegistry {
-  const drivers = options.drivers && options.drivers.length > 0 ? options.drivers : [new MemoryFlagDriver()];
+  const drivers =
+    options.drivers && options.drivers.length > 0 ? options.drivers : [new MemoryFlagDriver()];
   return new FeatureFlagDriverRegistry(drivers, options.default);
 }
 
@@ -92,7 +93,10 @@ describe('FeatureFlagsService', () => {
         if (level === 'WARN') warnings.push(line);
       });
 
-      const flags = service({ drivers: [new ThrowingDriver()], manifest: { 'new-checkout': true } });
+      const flags = service({
+        drivers: [new ThrowingDriver()],
+        manifest: { 'new-checkout': true },
+      });
 
       // fallback = manifest default (true), despite the driver rejecting
       expect(await flags.getBooleanValue('new-checkout')).toBe(true);
