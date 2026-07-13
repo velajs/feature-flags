@@ -24,7 +24,7 @@ export class FeatureFlagDriverRegistry {
       }
       this.drivers.set(driver.name, driver);
     }
-    const requested = defaultName ?? drivers[0].name;
+    const requested = defaultName ?? drivers[0]!.name;
     if (!this.drivers.has(requested)) {
       throw new FeatureFlagError(`Default feature flag driver "${requested}" is not registered.`);
     }

@@ -33,7 +33,9 @@ describe('FeatureFlagsModule', () => {
 
   it('resolves and evaluates inside an entrypoint (queue/cron) scope — no request', async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [FeatureFlagsModule.forRoot({ drivers: [memoryFlagDriver({ values: { job: true } })] })],
+      imports: [
+        FeatureFlagsModule.forRoot({ drivers: [memoryFlagDriver({ values: { job: true } })] }),
+      ],
     }).compile();
     const app = await moduleRef.createApplication();
 

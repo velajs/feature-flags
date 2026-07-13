@@ -10,7 +10,10 @@ import {
   type ExecutionContext,
   type RequestContext,
 } from '@velajs/vela';
-import { FEATURE_FLAG_METADATA, type FeatureFlagMetadata } from '../decorators/feature-flag.decorator';
+import {
+  FEATURE_FLAG_METADATA,
+  type FeatureFlagMetadata,
+} from '../decorators/feature-flag.decorator';
 import type { FeatureFlagsService } from '../feature-flags.service';
 import { FEATURE_FLAG_TOKENS } from '../feature-flags.tokens';
 
@@ -35,7 +38,10 @@ export class FeatureFlagGuard implements CanActivate {
   constructor(@Inject(FEATURE_FLAG_TOKENS.Service) private readonly flags: FeatureFlagsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const meta = this.reflector.getAllAndOverride<FeatureFlagMetadata>(FEATURE_FLAG_METADATA, context);
+    const meta = this.reflector.getAllAndOverride<FeatureFlagMetadata>(
+      FEATURE_FLAG_METADATA,
+      context,
+    );
     if (!meta) return true;
 
     const requestContext = this.requestContext(context);

@@ -62,7 +62,8 @@ export class FeatureFlagsService {
   private readonly driver: FeatureFlagDriver;
 
   constructor(
-    @Inject(FEATURE_FLAG_TOKENS.DriverRegistry) private readonly registry: FeatureFlagDriverRegistry,
+    @Inject(FEATURE_FLAG_TOKENS.DriverRegistry)
+    private readonly registry: FeatureFlagDriverRegistry,
     @Inject(FEATURE_FLAG_TOKENS.Options) private readonly options: FeatureFlagsOptions,
     @Optional() @Inject(Logger) logger?: LoggerService,
     // The next two are never provided by DI (they carry `@Optional()` so the
@@ -102,7 +103,11 @@ export class FeatureFlagsService {
   // ==================== EVALUATION ====================
 
   /** Evaluate a flag as a `boolean`. */
-  async getBooleanValue(flagKey: FlagKey, defaultValue?: boolean, context?: FlagContext): Promise<boolean> {
+  async getBooleanValue(
+    flagKey: FlagKey,
+    defaultValue?: boolean,
+    context?: FlagContext,
+  ): Promise<boolean> {
     const fallback = this.fallback(flagKey, defaultValue, false);
     return this.safe(
       flagKey,
@@ -112,7 +117,11 @@ export class FeatureFlagsService {
   }
 
   /** Evaluate a flag as a `string`. */
-  async getStringValue(flagKey: FlagKey, defaultValue?: string, context?: FlagContext): Promise<string> {
+  async getStringValue(
+    flagKey: FlagKey,
+    defaultValue?: string,
+    context?: FlagContext,
+  ): Promise<string> {
     const fallback = this.fallback(flagKey, defaultValue, '');
     return this.safe(
       flagKey,
@@ -122,7 +131,11 @@ export class FeatureFlagsService {
   }
 
   /** Evaluate a flag as a `number`. */
-  async getNumberValue(flagKey: FlagKey, defaultValue?: number, context?: FlagContext): Promise<number> {
+  async getNumberValue(
+    flagKey: FlagKey,
+    defaultValue?: number,
+    context?: FlagContext,
+  ): Promise<number> {
     const fallback = this.fallback(flagKey, defaultValue, 0);
     return this.safe(
       flagKey,
@@ -132,7 +145,11 @@ export class FeatureFlagsService {
   }
 
   /** Evaluate a flag as a typed object. */
-  async getObjectValue<T extends object>(flagKey: FlagKey, defaultValue?: T, context?: FlagContext): Promise<T> {
+  async getObjectValue<T extends object>(
+    flagKey: FlagKey,
+    defaultValue?: T,
+    context?: FlagContext,
+  ): Promise<T> {
     const fallback = this.fallback(flagKey, defaultValue, {} as T);
     return this.safe(
       flagKey,
@@ -142,41 +159,73 @@ export class FeatureFlagsService {
   }
 
   /** Evaluate a `boolean` flag with synthesized evaluation metadata. */
-  async getBooleanDetails(flagKey: FlagKey, defaultValue?: boolean, context?: FlagContext): Promise<FlagEvaluationDetails<boolean>> {
+  async getBooleanDetails(
+    flagKey: FlagKey,
+    defaultValue?: boolean,
+    context?: FlagContext,
+  ): Promise<FlagEvaluationDetails<boolean>> {
     const fallback = this.fallback(flagKey, defaultValue, false);
     return this.safe(
       flagKey,
-      async () => this.details(flagKey, await this.driver.getBoolean(flagKey, fallback, await this.context(context))),
+      async () =>
+        this.details(
+          flagKey,
+          await this.driver.getBoolean(flagKey, fallback, await this.context(context)),
+        ),
       (error) => this.errorDetails(flagKey, fallback, error),
     );
   }
 
   /** Evaluate a `string` flag with synthesized evaluation metadata. */
-  async getStringDetails(flagKey: FlagKey, defaultValue?: string, context?: FlagContext): Promise<FlagEvaluationDetails<string>> {
+  async getStringDetails(
+    flagKey: FlagKey,
+    defaultValue?: string,
+    context?: FlagContext,
+  ): Promise<FlagEvaluationDetails<string>> {
     const fallback = this.fallback(flagKey, defaultValue, '');
     return this.safe(
       flagKey,
-      async () => this.details(flagKey, await this.driver.getString(flagKey, fallback, await this.context(context))),
+      async () =>
+        this.details(
+          flagKey,
+          await this.driver.getString(flagKey, fallback, await this.context(context)),
+        ),
       (error) => this.errorDetails(flagKey, fallback, error),
     );
   }
 
   /** Evaluate a `number` flag with synthesized evaluation metadata. */
-  async getNumberDetails(flagKey: FlagKey, defaultValue?: number, context?: FlagContext): Promise<FlagEvaluationDetails<number>> {
+  async getNumberDetails(
+    flagKey: FlagKey,
+    defaultValue?: number,
+    context?: FlagContext,
+  ): Promise<FlagEvaluationDetails<number>> {
     const fallback = this.fallback(flagKey, defaultValue, 0);
     return this.safe(
       flagKey,
-      async () => this.details(flagKey, await this.driver.getNumber(flagKey, fallback, await this.context(context))),
+      async () =>
+        this.details(
+          flagKey,
+          await this.driver.getNumber(flagKey, fallback, await this.context(context)),
+        ),
       (error) => this.errorDetails(flagKey, fallback, error),
     );
   }
 
   /** Evaluate a typed object flag with synthesized evaluation metadata. */
-  async getObjectDetails<T extends object>(flagKey: FlagKey, defaultValue?: T, context?: FlagContext): Promise<FlagEvaluationDetails<T>> {
+  async getObjectDetails<T extends object>(
+    flagKey: FlagKey,
+    defaultValue?: T,
+    context?: FlagContext,
+  ): Promise<FlagEvaluationDetails<T>> {
     const fallback = this.fallback(flagKey, defaultValue, {} as T);
     return this.safe(
       flagKey,
-      async () => this.details(flagKey, await this.driver.getObject<T>(flagKey, fallback, await this.context(context))),
+      async () =>
+        this.details(
+          flagKey,
+          await this.driver.getObject<T>(flagKey, fallback, await this.context(context)),
+        ),
       (error) => this.errorDetails(flagKey, fallback, error),
     );
   }
@@ -199,10 +248,12 @@ export class FeatureFlagsService {
       );
       return { ...this.manifest };
     }
-    const values = await Promise.all(keys.map((key) => this.evaluate(key, this.manifest[key], merged)));
+    const values = await Promise.all(
+      keys.map((key) => this.evaluate(key, this.manifest[key]!, merged)),
+    );
     const result: Record<string, FlagValue> = {};
     keys.forEach((key, i) => {
-      result[key] = values[i];
+      result[key] = values[i]!;
     });
     return result;
   }
@@ -210,7 +261,10 @@ export class FeatureFlagsService {
   // ==================== INTERNAL ====================
 
   /** Immutable clone with a different driver and/or bound context. */
-  private clone(overrides: { driver?: FeatureFlagDriver; context?: RequestContext }): FeatureFlagsService {
+  private clone(overrides: {
+    driver?: FeatureFlagDriver;
+    context?: RequestContext;
+  }): FeatureFlagsService {
     return new FeatureFlagsService(
       this.registry,
       this.options,
@@ -236,16 +290,36 @@ export class FeatureFlagsService {
   }
 
   /** Evaluate a single flag, choosing the method from the declared default's type. */
-  private evaluate(flagKey: string, declared: FlagValue, context?: FlagContext): Promise<FlagValue> {
+  private evaluate(
+    flagKey: string,
+    declared: FlagValue,
+    context?: FlagContext,
+  ): Promise<FlagValue> {
     switch (typeof declared) {
       case 'boolean':
-        return this.safe(flagKey, () => this.driver.getBoolean(flagKey, declared, context), () => declared);
+        return this.safe(
+          flagKey,
+          () => this.driver.getBoolean(flagKey, declared, context),
+          () => declared,
+        );
       case 'number':
-        return this.safe(flagKey, () => this.driver.getNumber(flagKey, declared, context), () => declared);
+        return this.safe(
+          flagKey,
+          () => this.driver.getNumber(flagKey, declared, context),
+          () => declared,
+        );
       case 'string':
-        return this.safe(flagKey, () => this.driver.getString(flagKey, declared, context), () => declared);
+        return this.safe(
+          flagKey,
+          () => this.driver.getString(flagKey, declared, context),
+          () => declared,
+        );
       default:
-        return this.safe(flagKey, () => this.driver.getObject(flagKey, declared as object, context), () => declared);
+        return this.safe(
+          flagKey,
+          () => this.driver.getObject(flagKey, declared as object, context),
+          () => declared,
+        );
     }
   }
 
@@ -253,7 +327,11 @@ export class FeatureFlagsService {
    * Run an evaluation and absorb any failure into the fallback. A flag lookup
    * must never take the caller down with it.
    */
-  private async safe<T>(flagKey: string, evaluate: () => Promise<T>, onError: (error: unknown) => T): Promise<T> {
+  private async safe<T>(
+    flagKey: string,
+    evaluate: () => Promise<T>,
+    onError: (error: unknown) => T,
+  ): Promise<T> {
     try {
       return await evaluate();
     } catch (error) {
@@ -269,7 +347,11 @@ export class FeatureFlagsService {
     return { flagKey, value, reason: 'STATIC' };
   }
 
-  private errorDetails<T extends FlagValue>(flagKey: string, value: T, error: unknown): FlagEvaluationDetails<T> {
+  private errorDetails<T extends FlagValue>(
+    flagKey: string,
+    value: T,
+    error: unknown,
+  ): FlagEvaluationDetails<T> {
     return { flagKey, value, reason: 'ERROR', errorMessage: message(error) };
   }
 }
