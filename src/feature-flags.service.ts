@@ -23,6 +23,15 @@ import type {
   FlagValue,
 } from './feature-flags.types';
 
+const TRUSTED_IDENTITY_CONTEXT_KEYS = new Set([
+  'userId',
+  'tenantId',
+  'organizationId',
+  'accountId',
+  'subject',
+  'sub',
+]);
+
 /**
  * Safely read the current request context. Returns `undefined` outside a
  * request or when ambient access isn't enabled — never throws — so the service
@@ -43,8 +52,9 @@ function ambientRequestContext(): RequestContext | undefined {
  * - **Manifest defaults** — omit a default and the value declared in the app's
  *   `manifest` is used (an explicit argument always wins).
  * - **Default context** — the module's `context` resolver is merged into every
- *   evaluation (per-call context overrides it), resolved from the current
- *   request and skipped automatically outside request scope.
+ *   evaluation. Per-call targeting attributes may override it, but trusted
+ *   identity keys remain sourced from request context. Resolution is skipped
+ *   automatically outside request scope.
  *
  * Switch drivers with {@link use}; bind a request with {@link forRequest} (the
  * guard does this). Evaluation NEVER throws — the driver returns the fallback
@@ -111,7 +121,11 @@ export class FeatureFlagsService {
     const fallback = this.fallback(flagKey, defaultValue, false);
     return this.safe(
       flagKey,
-      async () => this.driver.getBoolean(flagKey, fallback, await this.context(context)),
+      async () =>
+        strictBoolean(
+          await this.driver.getBoolean(flagKey, fallback, await this.context(context)),
+          flagKey,
+        ),
       () => fallback,
     );
   }
@@ -170,7 +184,10 @@ export class FeatureFlagsService {
       async () =>
         this.details(
           flagKey,
-          await this.driver.getBoolean(flagKey, fallback, await this.context(context)),
+          strictBoolean(
+            await this.driver.getBoolean(flagKey, fallback, await this.context(context)),
+            flagKey,
+          ),
         ),
       (error) => this.errorDetails(flagKey, fallback, error),
     );
@@ -279,13 +296,18 @@ export class FeatureFlagsService {
     const base = this.boundContext ?? ambientRequestContext();
     if (!this.options.context || !base) return callContext;
     const resolved = await this.options.context(base);
-    return callContext ? { ...resolved, ...callContext } : resolved;
+    if (!callContext) return resolved;
+    const merged: FlagContext = { ...resolved, ...callContext };
+    for (const key of TRUSTED_IDENTITY_CONTEXT_KEYS) {
+      if (Object.hasOwn(resolved, key)) merged[key] = resolved[key];
+    }
+    return merged;
   }
 
   /** Pick the default: explicit arg, then manifest, then the type's zero value. */
   private fallback<T extends FlagValue>(flagKey: string, provided: T | undefined, zero: T): T {
     if (provided !== undefined) return provided;
-    if (flagKey in this.manifest) return this.manifest[flagKey] as T;
+    if (Object.hasOwn(this.manifest, flagKey)) return this.manifest[flagKey] as T;
     return zero;
   }
 
@@ -299,7 +321,8 @@ export class FeatureFlagsService {
       case 'boolean':
         return this.safe(
           flagKey,
-          () => this.driver.getBoolean(flagKey, declared, context),
+          async () =>
+            strictBoolean(await this.driver.getBoolean(flagKey, declared, context), flagKey),
           () => declared,
         );
       case 'number':
@@ -359,4 +382,11 @@ export class FeatureFlagsService {
 /** Extract a human-readable message from an unknown thrown value. */
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function strictBoolean(value: unknown, flagKey: string): boolean {
+  if (typeof value !== 'boolean') {
+    throw new TypeError(`Feature flag "${flagKey}" returned a non-boolean value`);
+  }
+  return value;
 }
