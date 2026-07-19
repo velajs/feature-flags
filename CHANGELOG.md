@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 588bd9f: Accept only literal boolean driver results, use own-property manifest lookup, preserve trusted identity fields, and make guards fail closed when context or evaluation is unavailable.
+
 ## 0.1.1
 
 ### Patch Changes
