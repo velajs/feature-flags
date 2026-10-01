@@ -9,14 +9,14 @@ allowBuilds:
 catalog:
   typescript: ^7.0.2
   tsdown: ^0.22.4
-  vitest: ^4.1.10
+  vitest: ^5.0.2
   oxlint: ^1.73.0
   oxfmt: ^0.58.0
   publint: ^0.3.21
   '@arethetypeswrong/cli': ^0.18.5
-  '@changesets/cli': ^2.31.0
+  '@changesets/cli': ^3.0.3
   '@swc/core': ^1.15.43
-  unplugin-swc: ^1.5.9
+  unplugin-swc: ^2.0.0
   '@types/node': ^24.13.3
 
 minimumReleaseAgeExclude:
